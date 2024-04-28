@@ -1,0 +1,86 @@
+%Fredrik möller och Johan Kindlundh
+clc
+clear all
+format long
+disp('uppgift9 a')
+x0=0; xslut=4; y0=2.5;
+yprim= @(t,y) -(((pi*sin(pi*t))./(1.5-(cos(pi*t)))).*y)-((1/6)*y);
+tol=10^-9;
+tolval=odeset('RelTol',tol);
+[xut,yut]=ode45(yprim,[x0:0.00048829:xslut],y0,tolval);
+n=length(xut);
+subplot(2,2,1)
+plot(xut,yut)
+
+%----------------------------------------------------------------------------------
+yut=yut.^2;
+yut2=yut(1:2:n); xut2=xut(1:2:n);
+yut3=yut2(1:2:length(yut2)); xut3=xut2(1:2:length(xut2));
+yut4=yut3(1:2:length(yut3)); xut4=xut3(1:2:length(xut3));
+
+%integral med åttondel av punkterna;
+t(1)=trapz(xut4,yut4);
+%integral med fjärdedel av punkterna
+t(2)=trapz(xut3,yut3);
+%integral med hälften av punkterna
+t(3)=trapz(xut2,yut2);
+%integral med samtliga punkter
+t(4)=trapz(xut,yut);
+t=t.*pi;
+ninni=t
+for i=1:2
+    b4=t(i);
+    b2=t(i+1);
+    b1=t(i+2);
+    Ep=(b4-b2)/(b2-b1);
+    Etrunk=abs(b1-b2);
+end
+%----------------------------------------------------------------------------------
+%Richardson-extrapolation
+for i=1:3
+    b2=t(i);
+    b1=t(i+1);
+    R(i)=b1+((b1-b2)/1);
+end
+
+%Richardson-extrapolation nr2
+for i=1:2
+b2=R(i);
+b1=R(i+1);
+RR(i)=b1+((b1-b2)/15);
+end
+
+Etrunk=abs(t(4)-t(3))
+Etrunkr=abs(R(3)-R(2))
+Etrunkrr=abs(RR(2)-RR(1))
+
+integralen=RR(2)
+%----------------------------------------------------------------------------------
+disp('b, lur vars volym bara är 70%')
+v=RR(2)*0.7;
+x0=0; x1=1; x2=2;  y0=2.5;
+e=1/30000;
+TOL=10^-5;
+while abs((x2-x1)/(min(x1,x2)))>TOL
+    [xut1,yut1]=ode45(yprim,[x0:e:x1],y0,tolval);
+    [xut2,yut2]=ode45(yprim,[x0:e:xslut],y0,tolval);
+    vol1=pi*trapz(xut1,yut1.^2)-v;
+    vol2=pi*trapz(xut2,yut2.^2)-v;
+    t = vol2*(x2-x1)/(vol2-vol1);
+    x1 = x2;
+    x2 = x2-t;
+end
+
+L=x1
+disp('Etrunk')
+disp(abs(x1-x2))
+%----------------------------------------------------------------------------------
+disp('c')
+x=xut(1:5:n);
+y=yut(1:5:n);
+p=(2*pi)/(length(y));
+fi=0:p:2*pi;
+X=x*ones(size(fi)); Y=y*cos(fi); Z=y*sin(fi);
+subplot(2,2,2)
+mesh(X,Y,Z)
+
